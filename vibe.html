@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time-Traveling Pixel Gardener</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Orbitron', monospace;
+            background: linear-gradient(45deg, #0a0a0a, #1a1a2e, #16213e);
+            overflow: hidden;
+            user-select: none;
+        }
+
+        #gameContainer {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #gameCanvas {
+            border: 4px solid #00ff41;
+            box-shadow: 0 0 30px #00ff4150, inset 0 0 20px #00ff4120;
+            background: #000;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00ff41;
+            font-size: 14px;
+            text-shadow: 0 0 10px #00ff41;
+            z-index: 10;
+        }
+
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .control-btn {
+            padding: 12px 20px;
+            background: linear-gradient(45deg, #00ff41, #00cc33);
+            border: none;
+            color: #000;
+            font-family: 'Orbitron', monospace;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 255, 65, 0.3);
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 65, 0.5);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        #startScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0a0a, #1a1a2e, #16213e);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #00ff41;
+            text-align: center;
+            z-index: 100;
+        }
+
+        #startScreen h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #00ff41;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        #startScreen p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        #startBtn {
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            background: linear-gradient(45deg, #00ff41, #00cc33);
+            border: none;
+            color: #000;
+            font-family: 'Orbitron', monospace;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 255, 65, 0.4);
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        #startBtn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(0, 255, 65, 0.6);
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 20px #00ff41; }
+            to { text-shadow: 0 0 30px #00ff41, 0 0 40px #00ff41; }
+        }
+
+        .instructions {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            #startScreen h1 {
+                font-size: 2rem;
+            }
+            #startScreen p {
+                font-size: 1rem;
+                padding: 0 20px;
+            }
+            #controls {
+                flex-wrap: wrap;
+                bottom: 10px;
+            }
+            .control-btn {
+                padding: 10px 15px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="startScreen">
+            <h1>🌱 TIME-TRAVELING PIXEL GARDENER 🌱</h1>
+            <p>
+                Journey through time as a pixel gardener with a magical watering can! 
+                Collect seeds from different eras, grow rare plants, and overcome temporal challenges.
+                Navigate between Prehistoric, Medieval, and Futuristic timelines to build your garden across time!
+            </p>
+            <button id="startBtn">START ADVENTURE</button>
+            <div class="instructions">
+                Use WASD to move • SPACE to water plants • 1/2/3 to switch timelines<br>
+                Collect seeds, avoid enemies, and grow the ultimate time garden!
+            </div>
+        </div>
+
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div id="ui">
+            <div>Score: <span id="score">0</span></div>
+            <div>Seeds: <span id="seeds">0</span></div>
+            <div>Timeline: <span id="timeline">Prehistoric</span></div>
+            <div>Health: <span id="health">100</span></div>
+        </div>
+
+        <div id="controls">
+            <button class="control-btn" id="timelineBtn">Switch Timeline</button>
+            <button class="control-btn" id="waterBtn">Water (Space)</button>
+            <button class="control-btn" id="plantBtn">Plant Seed</button>
+        </div>
+    </div>
+
+    <script>
+        // Game state and constants
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const ui = {
+            score: document.getElementById('score'),
+            seeds: document.getElementById('seeds'),
+            timeline: document.getElementById('timeline'),
+            health: document.getElementById('health')
+        };
+
+        // Game configuration
+        const GAME_CONFIG = {
+            tileSize: 32,
+            playerSpeed: 3,
+            plantGrowthRate: 0.1,
+            enemySpeed: 1.5
+        };
+
+        // Timeline definitions
+        const TIMELINES = {
+            prehistoric: {
+                name: 'Prehistoric',
+                color: '#4a4a2a',
+                bgColor: '#2a2a1a',
+                hazard: 'acid_rain',
+                enemyType: 'dinosaur',
+                plantBonus: 1.2
+            },
+            medieval: {
+                name: 'Medieval',
+                color: '#5a3a2a',
+                bgColor: '#3a2a1a',
+                hazard: 'knights',
+                enemyType: 'knight',
+                plantBonus: 1.0
+            },
+            futuristic: {
+                name: 'Futuristic',
+                color: '#2a3a5a',
+                bgColor: '#1a2a3a',
+                hazard: 'robots',
+                enemyType: 'robot',
+                plantBonus: 1.5
+            }
+        };
+
+        // Game state
+        let gameState = {
+            currentTimeline: 'prehistoric',
+            score: 0,
+            seeds: 3,
+            health: 100,
+            gameRunning: false,
+            player: { x: 400, y: 300, width: 24, height: 24 },
+            plants: [],
+            enemies: [],
+            particles: [],
+            hazards: [],
+            messages: [],
+            lastTime: 0,
+            keys: {}
+        };
+
+        // Add message system
+        function showMessage(text, color = '#00ff41') {
+            gameState.messages.push({
+                text: text,
+                x: canvas.width / 2,
+                y: 100,
+                color: color,
+                life: 120,
+                maxLife: 120
+            });
+        }
+
+        // Audio context for sound effects
+        let audioContext;
+        
+        function initAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch(e) {
+                console.log('Audio not supported');
+            }
+        }
+
+        function playSound(frequency, duration, type = 'sine') {
+            if (!audioContext) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+            oscillator.type = type;
+            
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        // Pixel art sprites using canvas drawing
+        function drawPixelSprite(x, y, sprite, scale = 1) {
+            const pixel = 2 * scale;
+            ctx.fillStyle = sprite.color;
+            
+            sprite.pattern.forEach((row, rowIndex) => {
+                row.forEach((cell, colIndex) => {
+                    if (cell) {
+                        ctx.fillRect(
+                            x + colIndex * pixel,
+                            y + rowIndex * pixel,
+                            pixel,
+                            pixel
+                        );
+                    }
+                });
+            });
+        }
+
+        // Sprite definitions
+        const SPRITES = {
+            player: {
+                color: '#00ff41',
+                pattern: [
+                    [0,0,1,1,1,0,0],
+                    [0,1,1,1,1,1,0],
+                    [0,1,0,1,0,1,0],
+                    [0,1,1,1,1,1,0],
+                    [0,0,1,0,1,0,0],
+                    [0,1,1,0,1,1,0],
+                    [1,1,0,0,0,1,1]
+                ]
+            },
+            plant_seed: {
+                color: '#8B4513',
+                pattern: [
+                    [0,1,1,0],
+                    [1,1,1,1],
+                    [1,1,1,1],
+                    [0,1,1,0]
+                ]
+            },
+            plant_sprout: {
+                color: '#32CD32',
+                pattern: [
+                    [0,0,1,0,0],
+                    [0,1,1,1,0],
+                    [1,1,1,1,1],
+                    [0,1,1,1,0],
+                    [0,0,1,0,0]
+                ]
+            },
+            plant_grown: {
+                color: '#228B22',
+                pattern: [
+                    [0,1,0,1,0],
+                    [1,1,1,1,1],
+                    [1,1,1,1,1],
+                    [0,1,1,1,0],
+                    [0,0,1,0,0],
+                    [0,0,1,0,0]
+                ]
+            },
+            enemy_dino: {
+                color: '#8B4513',
+                pattern: [
+                    [0,1,1,1,0],
+                    [1,1,0,1,1],
+                    [1,1,1,1,1],
+                    [1,1,1,1,0],
+                    [1,0,1,0,0],
+                    [1,0,1,0,0]
+                ]
+            },
+            enemy_knight: {
+                color: '#C0C0C0',
+                pattern: [
+                    [0,1,1,1,0],
+                    [1,1,1,1,1],
+                    [1,0,1,0,1],
+                    [1,1,1,1,1],
+                    [0,1,1,1,0],
+                    [0,1,0,1,0]
+                ]
+            },
+            enemy_robot: {
+                color: '#4169E1',
+                pattern: [
+                    [1,1,1,1,1],
+                    [1,0,1,0,1],
+                    [1,1,1,1,1],
+                    [0,1,1,1,0],
+                    [0,1,0,1,0],
+                    [1,0,0,0,1]
+                ]
+            }
+        };
+
+        // Initialize game
+        function initGame() {
+            initAudio();
+            spawnEnemies();
+            spawnSeeds();
+            gameLoop();
+        }
+
+        function spawnEnemies() {
+            gameState.enemies = [];
+            const timeline = TIMELINES[gameState.currentTimeline];
+            
+            for (let i = 0; i < 3; i++) {
+                gameState.enemies.push({
+                    x: Math.random() * (canvas.width - 50) + 25,
+                    y: Math.random() * (canvas.height - 50) + 25,
+                    type: timeline.enemyType,
+                    direction: Math.random() * Math.PI * 2,
+                    speed: GAME_CONFIG.enemySpeed + Math.random()
+                });
+            }
+        }
+
+        function spawnSeeds() {
+            // Spawn collectible seeds
+            for (let i = 0; i < 5; i++) {
+                gameState.particles.push({
+                    x: Math.random() * (canvas.width - 40) + 20,
+                    y: Math.random() * (canvas.height - 40) + 20,
+                    type: 'seed',
+                    collected: false
+                });
+            }
+        }
+
+        function switchTimeline() {
+            const timelines = Object.keys(TIMELINES);
+            const currentIndex = timelines.indexOf(gameState.currentTimeline);
+            const nextIndex = (currentIndex + 1) % timelines.length;
+            
+            gameState.currentTimeline = timelines[nextIndex];
+            ui.timeline.textContent = TIMELINES[gameState.currentTimeline].name;
+            
+            // Add timeline switch effect
+            for (let i = 0; i < 20; i++) {
+                gameState.particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    type: 'timeline',
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8,
+                    life: 40,
+                    maxLife: 40
+                });
+            }
+            
+            showMessage(`Traveled to ${TIMELINES[gameState.currentTimeline].name} Era! ⏰`, '#ff00ff');
+            
+            spawnEnemies();
+            playSound(800, 0.2, 'square');
+        }
+
+        function plantSeed() {
+            if (gameState.seeds > 0) {
+                // Check if there's already a plant here
+                const existingPlant = gameState.plants.find(plant => {
+                    const distance = Math.sqrt(
+                        Math.pow(plant.x - gameState.player.x, 2) + 
+                        Math.pow(plant.y - gameState.player.y, 2)
+                    );
+                    return distance < 30;
+                });
+                
+                if (existingPlant) {
+                    showMessage("Plant already here! 🌱", '#ff6600');
+                    return;
+                }
+                
+                gameState.plants.push({
+                    x: gameState.player.x,
+                    y: gameState.player.y,
+                    growth: 0,
+                    health: 100,
+                    watered: 0,
+                    timeline: gameState.currentTimeline,
+                    justPlanted: 30
+                });
+                
+                gameState.seeds--;
+                ui.seeds.textContent = gameState.seeds;
+                
+                // Add planting effect
+                for (let i = 0; i < 6; i++) {
+                    gameState.particles.push({
+                        x: gameState.player.x + Math.random() * 15 - 7,
+                        y: gameState.player.y + Math.random() * 15 - 7,
+                        type: 'dirt',
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: (Math.random() - 0.5) * 2,
+                        life: 20,
+                        maxLife: 20
+                    });
+                }
+                
+                showMessage("Seed planted! 🌱", '#00ff00');
+                playSound(400, 0.3, 'sine');
+            } else {
+                showMessage("No seeds to plant! Find more seeds first", '#ff0000');
+            }
+        }
+
+        function waterPlants() {
+            let watered = false;
+            gameState.plants.forEach(plant => {
+                const distance = Math.sqrt(
+                    Math.pow(plant.x - gameState.player.x, 2) + 
+                    Math.pow(plant.y - gameState.player.y, 2)
+                );
+                
+                if (distance < 50) {
+                    plant.watered = Math.min(plant.watered + 20, 100);
+                    watered = true;
+                    // Add water splash effect
+                    for (let i = 0; i < 8; i++) {
+                        gameState.particles.push({
+                            x: plant.x + Math.random() * 20 - 10,
+                            y: plant.y + Math.random() * 20 - 10,
+                            type: 'water',
+                            vx: (Math.random() - 0.5) * 4,
+                            vy: (Math.random() - 0.5) * 4,
+                            life: 30,
+                            maxLife: 30
+                        });
+                    }
+                    playSound(600, 0.2, 'sine');
+                }
+            });
+            
+            if (!watered) {
+                // Show "no plants to water" message
+                showMessage("No plants nearby to water!", '#ffaa00');
+            } else {
+                showMessage("Plants watered! 💧", '#00aaff');
+            }
+        }
+
+        function updatePlants() {
+            gameState.plants.forEach((plant, index) => {
+                if (plant.justPlanted) {
+                    plant.justPlanted--;
+                }
+                
+                if (plant.watered > 0) {
+                    const timeline = TIMELINES[plant.timeline];
+                    plant.growth += GAME_CONFIG.plantGrowthRate * timeline.plantBonus;
+                    plant.watered = Math.max(plant.watered - 0.5, 0);
+                }
+                
+                // Check if plant is fully grown
+                if (plant.growth >= 100) {
+                    gameState.score += 100;
+                    ui.score.textContent = gameState.score;
+                    
+                    // Add harvest effect
+                    for (let i = 0; i < 10; i++) {
+                        gameState.particles.push({
+                            x: plant.x + Math.random() * 20 - 10,
+                            y: plant.y + Math.random() * 20 - 10,
+                            type: 'harvest',
+                            vx: (Math.random() - 0.5) * 4,
+                            vy: -Math.random() * 3 - 1,
+                            life: 50,
+                            maxLife: 50
+                        });
+                    }
+                    
+                    showMessage("Plant harvested! +100 points 🌸", '#00ff88');
+                    gameState.plants.splice(index, 1);
+                    playSound(1000, 0.5, 'sine');
+                }
+            });
+        }
+
+        function updateEnemies() {
+            gameState.enemies.forEach(enemy => {
+                // Simple AI movement
+                enemy.direction += (Math.random() - 0.5) * 0.2;
+                enemy.x += Math.cos(enemy.direction) * enemy.speed;
+                enemy.y += Math.sin(enemy.direction) * enemy.speed;
+                
+                // Keep enemies on screen
+                if (enemy.x < 0 || enemy.x > canvas.width - 20) {
+                    enemy.direction = Math.PI - enemy.direction;
+                }
+                if (enemy.y < 0 || enemy.y > canvas.height - 20) {
+                    enemy.direction = -enemy.direction;
+                }
+                
+                enemy.x = Math.max(0, Math.min(canvas.width - 20, enemy.x));
+                enemy.y = Math.max(0, Math.min(canvas.height - 20, enemy.y));
+                
+                // Check collision with player
+                const distance = Math.sqrt(
+                    Math.pow(enemy.x - gameState.player.x, 2) + 
+                    Math.pow(enemy.y - gameState.player.y, 2)
+                );
+                
+                if (distance < 30) {
+                    gameState.health = Math.max(gameState.health - 1, 0);
+                    ui.health.textContent = gameState.health;
+                    
+                    // Add damage effect
+                    for (let i = 0; i < 3; i++) {
+                        gameState.particles.push({
+                            x: gameState.player.x + Math.random() * 10 - 5,
+                            y: gameState.player.y + Math.random() * 10 - 5,
+                            type: 'damage',
+                            vx: (Math.random() - 0.5) * 3,
+                            vy: (Math.random() - 0.5) * 3,
+                            life: 20,
+                            maxLife: 20
+                        });
+                    }
+                    
+                    if (gameState.health <= 0) {
+                        showMessage("Game Over! 💀", '#ff0000');
+                        setTimeout(endGame, 2000);
+                    } else if (gameState.health % 10 === 0) {
+                        showMessage("Taking damage! Avoid enemies! ⚠️", '#ff4400');
+                    }
+                }
+            });
+        }
+
+        function updatePlayer() {
+            const speed = GAME_CONFIG.playerSpeed;
+            
+            if (gameState.keys['w'] || gameState.keys['W']) {
+                gameState.player.y = Math.max(0, gameState.player.y - speed);
+            }
+            if (gameState.keys['s'] || gameState.keys['S']) {
+                gameState.player.y = Math.min(canvas.height - gameState.player.height, gameState.player.y + speed);
+            }
+            if (gameState.keys['a'] || gameState.keys['A']) {
+                gameState.player.x = Math.max(0, gameState.player.x - speed);
+            }
+            if (gameState.keys['d'] || gameState.keys['D']) {
+                gameState.player.x = Math.min(canvas.width - gameState.player.width, gameState.player.x + speed);
+            }
+        }
+
+        function collectSeeds() {
+            gameState.particles.forEach((particle, index) => {
+                if (particle.type === 'seed' && !particle.collected) {
+                    const distance = Math.sqrt(
+                        Math.pow(particle.x - gameState.player.x, 2) + 
+                        Math.pow(particle.y - gameState.player.y, 2)
+                    );
+                    
+                    if (distance < 25) {
+                        particle.collected = true;
+                        gameState.seeds++;
+                        gameState.score += 50;
+                        ui.seeds.textContent = gameState.seeds;
+                        ui.score.textContent = gameState.score;
+                        
+                        // Add collection effect
+                        for (let i = 0; i < 5; i++) {
+                            gameState.particles.push({
+                                x: particle.x,
+                                y: particle.y,
+                                type: 'collect',
+                                vx: (Math.random() - 0.5) * 6,
+                                vy: (Math.random() - 0.5) * 6,
+                                life: 25,
+                                maxLife: 25
+                            });
+                        }
+                        
+                        showMessage("Seed collected! +50 points 🌰", '#ffff00');
+                        playSound(800, 0.3, 'square');
+                        gameState.particles.splice(index, 1);
+                    }
+                }
+            });
+        }
+
+        function render() {
+            // Clear canvas with timeline-specific background
+            const timeline = TIMELINES[gameState.currentTimeline];
+            ctx.fillStyle = timeline.bgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid pattern
+            ctx.strokeStyle = timeline.color + '30';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < canvas.width; x += GAME_CONFIG.tileSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += GAME_CONFIG.tileSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // Draw collectible seeds with glow effect
+            gameState.particles.forEach((particle, index) => {
+                if (particle.type === 'seed' && !particle.collected) {
+                    // Glowing effect
+                    ctx.save();
+                    ctx.shadowColor = '#ffff00';
+                    ctx.shadowBlur = 10;
+                    drawPixelSprite(particle.x, particle.y, SPRITES.plant_seed, 2);
+                    ctx.restore();
+                    
+                    // Floating text
+                    ctx.fillStyle = '#ffff00';
+                    ctx.font = '12px Orbitron';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('SEED', particle.x + 8, particle.y - 10);
+                }
+                
+                // Update and draw particles
+                if (particle.type === 'water') {
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    particle.life--;
+                    
+                    const alpha = particle.life / particle.maxLife;
+                    ctx.fillStyle = `rgba(0, 150, 255, ${alpha})`;
+                    ctx.fillRect(particle.x, particle.y, 3, 3);
+                    
+                    if (particle.life <= 0) {
+                        gameState.particles.splice(index, 1);
+                    }
+                } else if (particle.type === 'dirt') {
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    particle.life--;
+                    
+                    const alpha = particle.life / particle.maxLife;
+                    ctx.fillStyle = `rgba(139, 69, 19, ${alpha})`;
+                    ctx.fillRect(particle.x, particle.y, 2, 2);
+                    
+                    if (particle.life <= 0) {
+                        gameState.particles.splice(index, 1);
+                    }
+                } else if (particle.type === 'timeline') {
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    particle.life--;
+                    
+                    const alpha = particle.life / particle.maxLife;
+                    ctx.fillStyle = `rgba(255, 0, 255, ${alpha})`;
+                    ctx.fillRect(particle.x, particle.y, 4, 4);
+                    
+                    if (particle.life <= 0) {
+                        gameState.particles.splice(index, 1);
+                    }
+                } else if (particle.type === 'collect') {
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    particle.life--;
+                    
+                    const alpha = particle.life / particle.maxLife;
+                    ctx.fillStyle = `rgba(255, 255, 0, ${alpha})`;
+                    ctx.fillRect(particle.x, particle.y, 3, 3);
+                    
+                    if (particle.life <= 0) {
+                        gameState.particles.splice(index, 1);
+                    }
+                } else if (particle.type === 'harvest') {
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    particle.life--;
+                    
+                    const alpha = particle.life / particle.maxLife;
+                    ctx.fillStyle = `rgba(0, 255, 136, ${alpha})`;
+                    ctx.fillRect(particle.x, particle.y, 4, 4);
+                    
+                    if (particle.life <= 0) {
+                        gameState.particles.splice(index, 1);
+                    }
+                } else if (particle.type === 'damage') {
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    particle.life--;
+                    
+                    const alpha = particle.life / particle.maxLife;
+                    ctx.fillStyle = `rgba(255, 0, 0, ${alpha})`;
+                    ctx.fillRect(particle.x, particle.y, 3, 3);
+                    
+                    if (particle.life <= 0) {
+                        gameState.particles.splice(index, 1);
+                    }
+                }
+            });
+            
+            // Draw plants with enhanced visuals
+            gameState.plants.forEach(plant => {
+                let sprite;
+                if (plant.growth < 30) {
+                    sprite = SPRITES.plant_seed;
+                } else if (plant.growth < 70) {
+                    sprite = SPRITES.plant_sprout;
+                } else {
+                    sprite = SPRITES.plant_grown;
+                }
+                
+                // Add glow for recently planted
+                if (plant.justPlanted) {
+                    ctx.save();
+                    ctx.shadowColor = '#00ff41';
+                    ctx.shadowBlur = 15;
+                    drawPixelSprite(plant.x, plant.y, sprite, 2);
+                    ctx.restore();
+                } else {
+                    drawPixelSprite(plant.x, plant.y, sprite, 2);
+                }
+                
+                // Draw growth bar with better styling
+                ctx.fillStyle = '#333';
+                ctx.fillRect(plant.x - 2, plant.y - 12, 34, 6);
+                ctx.fillStyle = '#ff4444';
+                ctx.fillRect(plant.x, plant.y - 10, 30, 2);
+                ctx.fillStyle = '#44ff44';
+                ctx.fillRect(plant.x, plant.y - 10, (30 * plant.growth) / 100, 2);
+                
+                // Draw watered indicator
+                if (plant.watered > 0) {
+                    ctx.fillStyle = '#0088ff';
+                    ctx.fillRect(plant.x, plant.y - 7, (30 * plant.watered) / 100, 2);
+                }
+                
+                // Show growth percentage
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '10px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.fillText(`${Math.floor(plant.growth)}%`, plant.x + 15, plant.y - 15);
+            });
+            
+            // Draw enemies with danger indicators
+            gameState.enemies.forEach(enemy => {
+                let sprite;
+                switch (enemy.type) {
+                    case 'dinosaur': sprite = SPRITES.enemy_dino; break;
+                    case 'knight': sprite = SPRITES.enemy_knight; break;
+                    case 'robot': sprite = SPRITES.enemy_robot; break;
+                }
+                
+                // Add danger glow
+                ctx.save();
+                ctx.shadowColor = '#ff0000';
+                ctx.shadowBlur = 8;
+                drawPixelSprite(enemy.x, enemy.y, sprite, 2);
+                ctx.restore();
+                
+                // Draw danger zone
+                const distance = Math.sqrt(
+                    Math.pow(enemy.x - gameState.player.x, 2) + 
+                    Math.pow(enemy.y - gameState.player.y, 2)
+                );
+                
+                if (distance < 60) {
+                    ctx.strokeStyle = '#ff444450';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(enemy.x + 10, enemy.y + 10, 30, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            });
+            
+            // Draw player with action indicator
+            ctx.save();
+            if (gameState.keys[' ']) {
+                ctx.shadowColor = '#00aaff';
+                ctx.shadowBlur = 12;
+            }
+            drawPixelSprite(gameState.player.x, gameState.player.y, SPRITES.player, 2);
+            ctx.restore();
+            
+            // Draw interaction range
+            ctx.strokeStyle = '#00ff4140';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(gameState.player.x + 12, gameState.player.y + 12, 50, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Draw messages
+            gameState.messages.forEach((message, index) => {
+                message.life--;
+                const alpha = message.life / message.maxLife;
+                
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = message.color;
+                ctx.font = 'bold 16px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.shadowColor = '#000000';
+                ctx.shadowBlur = 3;
+                ctx.fillText(message.text, message.x, message.y - (message.maxLife - message.life) * 0.5);
+                ctx.restore();
+                
+                if (message.life <= 0) {
+                    gameState.messages.splice(index, 1);
+                }
+            });
+            
+            // Add atmospheric effects
+            if (Math.random() < 0.1) {
+                ctx.fillStyle = timeline.color + '40';
+                ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, 2, 2);
+            }
+        }
+
+        function gameLoop(currentTime) {
+            if (!gameState.gameRunning) return;
+            
+            const deltaTime = currentTime - gameState.lastTime;
+            gameState.lastTime = currentTime;
+            
+            updatePlayer();
+            updateEnemies();
+            updatePlants();
+            collectSeeds();
+            
+            render();
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            document.getElementById('startScreen').style.display = 'none';
+            gameState.gameRunning = true;
+            initGame();
+        }
+
+        function endGame() {
+            gameState.gameRunning = false;
+            alert(`Game Over! Final Score: ${gameState.score}`);
+            location.reload();
+        }
+
+        // Event listeners
+        document.getElementById('startBtn').addEventListener('click', startGame);
+        
+        document.getElementById('timelineBtn').addEventListener('click', switchTimeline);
+        document.getElementById('waterBtn').addEventListener('click', waterPlants);
+        document.getElementById('plantBtn').addEventListener('click', plantSeed);
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            gameState.keys[e.key] = true;
+            
+            if (e.key === ' ') {
+                e.preventDefault();
+                waterPlants();
+            }
+            if (e.key === '1') switchTimeline();
+            if (e.key === '2') switchTimeline();
+            if (e.key === '3') switchTimeline();
+            if (e.key === 'Enter' || e.key === 'e') plantSeed();
+        });
+
+        document.addEventListener('keyup', (e) => {
+            gameState.keys[e.key] = false;
+        });
+
+        // Touch controls for mobile
+        let touchStartX, touchStartY;
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            touchStartX = touch.clientX - rect.left;
+            touchStartY = touch.clientY - rect.top;
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const touchX = touch.clientX - rect.left;
+            const touchY = touch.clientY - rect.top;
+            
+            const deltaX = touchX - touchStartX;
+            const deltaY = touchY - touchStartY;
+            
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                gameState.keys[deltaX > 0 ? 'd' : 'a'] = true;
+            } else {
+                gameState.keys[deltaY > 0 ? 's' : 'w'] = true;
+            }
+        });
+
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            Object.keys(gameState.keys).forEach(key => {
+                gameState.keys[key] = false;
+            });
+        });
+
+        // Resize canvas for mobile
+        function resizeCanvas() {
+            const container = document.getElementById('gameContainer');
+            const maxWidth = Math.min(window.innerWidth - 40, 800);
+            const maxHeight = Math.min(window.innerHeight - 160, 600);
+            
+            canvas.style.width = maxWidth + 'px';
+            canvas.style.height = maxHeight + 'px';
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Prevent context menu on right click
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    </script>
+</body>
+</html>
